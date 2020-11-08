@@ -15,7 +15,7 @@ class LocallyConnectedDense(tf.keras.layers.Layer):
     def build(self, input_shape):
         self.__w = self.add_weight(
             name="w",
-            shape=(self.__input_shape[1], self.__units),
+            shape=(input_shape[1], self.__units),
             initializer=self.__locally_dense_initializer)
 
         self.__cond = tf.convert_to_tensor(self.__assign_with_bfs(np.ones(shape=self.__w.shape, dtype=np.bool), self.__w.shape, False))
@@ -35,9 +35,7 @@ class LocallyConnectedDense(tf.keras.layers.Layer):
 
     @tf.autograph.experimental.do_not_convert
     def call(self, x, **kwargs):
-        print(x)
         cal_kernel = tf.where(self.__cond, self.__w, self.__where_y)
-        print(cal_kernel)
         output = self.__activation(tf.matmul(x, cal_kernel, name="locally_dense") + self.__b)
         return output
 

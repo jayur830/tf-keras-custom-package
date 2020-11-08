@@ -15,10 +15,13 @@ if __name__ == '__main__':
 
     input_layer = tf.keras.layers.Input(shape=(7,))
     dense = LocallyConnectedDense(units=4)
-    model = tf.keras.models.Model(input_layer, dense(input_layer))
-    model.compile(loss="mse")
+    model = tf.keras.models.Sequential([input_layer, dense])
+    model.compile(loss="mae")
     model.summary()
 
-    print(f"<Before>\n{dense.weights}")
-    model.fit(x=x, y=y, batch_size=1, epochs=10)
-    print(f"<After>\n{dense.weights}")
+    print(dense.trainable_weights)
+    print(model.trainable_weights)
+
+    # print(f"<Before>\n{dense.trainable_weights}")
+    # model.fit(x=x, y=y, batch_size=1, epochs=10)
+    # print(f"<After>\n{dense.trainable_weights}")
