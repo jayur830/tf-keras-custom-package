@@ -6,18 +6,13 @@ class LocallyConnectedDense(tf.keras.layers.Layer):
     def __init__(self,
                  units: int,
                  activation=None,
-                 input_shape: tuple = None):
-        super(LocallyConnectedDense, self).__init__()
+                 **kwargs):
+        super(LocallyConnectedDense, self).__init__(name="locally_connected_dense", **kwargs)
         self.__units = units
         self.__activation = self.__get_activation(activation)
         self.__w = self.__b = self.__cond = self.__where_y = None
-        self.__input_shape = None
-        if input_shape is not None:
-            self.__call__(tf.keras.layers.Input(shape=input_shape))
 
     def build(self, input_shape):
-        self.__input_shape = input_shape
-
         self.__w = self.add_weight(
             name="w",
             shape=(self.__input_shape[1], self.__units),
@@ -31,7 +26,7 @@ class LocallyConnectedDense(tf.keras.layers.Layer):
             shape=(self.__units,),
             initializer=tf.keras.initializers.get("zeros"))
 
-        super().build(self.__input_shape)
+        super().build(input_shape)
         self.built = True
 
     def __call__(self, *args, **kwargs):
@@ -40,8 +35,11 @@ class LocallyConnectedDense(tf.keras.layers.Layer):
 
     @tf.autograph.experimental.do_not_convert
     def call(self, x, **kwargs):
+        print(x)
         cal_kernel = tf.where(self.__cond, self.__w, self.__where_y)
-        return self.__activation(tf.matmul(x, cal_kernel) + self.__b)
+        print(cal_kernel)
+        output = self.__activation(tf.matmul(x, cal_kernel, name="locally_dense") + self.__b)
+        return output
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], self.__units

@@ -30,7 +30,7 @@ if __name__ == '__main__':
     #
     # print(f"Before:\n{model.weights}")
 
-    print(model.input_shape)
+    # print(model.input_shape)
 
     # model.fit(
     #     x=np.array([[1, 2, 3, 4, 5, 6, 7]]).astype("float32"),
