@@ -5,10 +5,12 @@ import tensorflow as tf
 class Local(tf.keras.layers.Layer):
     def __init__(self,
                  units: int,
-                 activation=None,
+                 activation: str = None,
+                 kernel_initializer=None,
                  **kwargs):
         self.__units = units
-        self.__activation = self.__get_activation(activation)
+        self.__activation = Local.__get_activation(activation)
+        self.__kernel_initializer = kernel_initializer
         self.__w = self.__b = self.__cond = self.__where_y = None
         super(Local, self).__init__(**kwargs)
 
@@ -16,15 +18,17 @@ class Local(tf.keras.layers.Layer):
         self.__w = self.add_weight(
             name="w",
             shape=(input_shape[1], self.__units),
-            initializer=self.__locally_dense_initializer)
+            initializer=Local.__locally_dense_initializer,
+            trainable=True)
 
-        self.__cond = tf.convert_to_tensor(self.__assign_with_bfs(np.ones(shape=self.__w.shape, dtype=np.bool), self.__w.shape, False))
+        self.__cond = tf.convert_to_tensor(Local.__assign_nan(np.ones(shape=self.__w.shape, dtype=np.bool), self.__w.shape, False))
         self.__where_y = tf.zeros(shape=self.__w.shape)
 
         self.__b = self.add_weight(
             name="b",
             shape=(self.__units,),
-            initializer=tf.keras.initializers.get("zeros"))
+            initializer=tf.keras.initializers.get("zeros"),
+            trainable=True)
 
         super(Local, self).build(input_shape)
         self.built = True
@@ -32,13 +36,14 @@ class Local(tf.keras.layers.Layer):
     @tf.autograph.experimental.do_not_convert
     def call(self, x, **kwargs):
         cal_kernel = tf.where(self.__cond, self.__w, self.__where_y)
-        output = self.__activation(tf.matmul(x, cal_kernel, name="locally_dense") + self.__b)
+        output = self.__activation(tf.matmul(x, cal_kernel) + self.__b)
         return output
 
     def compute_output_shape(self, input_shape):
         return input_shape[0], self.__units
 
-    def __get_activation(self, activation):
+    @staticmethod
+    def __get_activation(activation):
         if activation is None:
             return tf.keras.activations.linear
         elif type(activation) is str:
@@ -48,24 +53,16 @@ class Local(tf.keras.layers.Layer):
         else:
             return activation
 
-    def __locally_dense_initializer(self, shape, dtype=None):
-        kernel = self.__assign_with_bfs(np.random.random(shape), shape, np.nan)
+    @staticmethod
+    def __locally_dense_initializer(shape, dtype=None):
+        kernel = Local.__assign_nan(np.random.random(shape), shape, np.nan)
         return tf.convert_to_tensor(kernel, dtype=dtype)
 
-    def __assign_with_bfs(self, matrix, shape, value):
+    @staticmethod
+    def __assign_nan(matrix, shape, value):
         rows, cols = shape[0], shape[1]
+        max_length = min(rows, cols) - 1
 
-        queue_0, queue_1 = [[0, 0]], [[rows - 1, cols - 1]]
-        while True:
-            index_0, index_1 = queue_0.pop(0), queue_1.pop(0)
-            matrix[index_0[0], index_0[1]] = value
-            matrix[index_1[0], index_1[1]] = value
-            if index_0[0] + 1 == rows - 1 or index_0[1] + 1 == cols - 1 or index_1[0] - 1 == 0 or index_1[1] - 1 == 0:
-                break
-            else:
-                queue_0.append([index_0[0] + 1, index_0[1]])
-                queue_0.append([index_0[0], index_0[1] + 1])
-                queue_1.append([index_1[0] - 1, index_1[1]])
-                queue_1.append([index_1[0], index_1[1] - 1])
-
+        for i in range(max_length):
+            matrix[i, :max_length - i] = matrix[rows - 1 - i, cols - max_length + i:cols] = value
         return matrix
