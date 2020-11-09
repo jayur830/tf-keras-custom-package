@@ -2,15 +2,15 @@ import numpy as np
 import tensorflow as tf
 
 
-class LocallyConnectedDense(tf.keras.layers.Layer):
+class Local(tf.keras.layers.Layer):
     def __init__(self,
                  units: int,
                  activation=None,
                  **kwargs):
-        super(LocallyConnectedDense, self).__init__(name="locally_connected_dense", **kwargs)
         self.__units = units
         self.__activation = self.__get_activation(activation)
         self.__w = self.__b = self.__cond = self.__where_y = None
+        super(Local, self).__init__(**kwargs)
 
     def build(self, input_shape):
         self.__w = self.add_weight(
@@ -26,12 +26,8 @@ class LocallyConnectedDense(tf.keras.layers.Layer):
             shape=(self.__units,),
             initializer=tf.keras.initializers.get("zeros"))
 
-        super().build(input_shape)
+        super(Local, self).build(input_shape)
         self.built = True
-
-    def __call__(self, *args, **kwargs):
-        self.build((None,) + args[0].shape if args[0].shape[0] is not None else args[0].shape)
-        return self.call(args[0])
 
     @tf.autograph.experimental.do_not_convert
     def call(self, x, **kwargs):
