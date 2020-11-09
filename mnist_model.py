@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from custom.local import Local
+from custom.layers import Local
 
 
 def mnist_model():
@@ -38,11 +38,13 @@ def mnist_model():
             kernel_size=3,
             kernel_initializer="he_normal"),
         tf.keras.layers.ReLU(),
+        # Pointwise Convolution
+        tf.keras.layers.Conv2D(
+            filters=16,
+            kernel_size=1,
+            kernel_initializer="he_normal"),
         # Global Average Pooling
         tf.keras.layers.GlobalAvgPool2D(),
-        tf.keras.layers.Dropout(.2),
-        Local(units=32),
-        tf.keras.layers.ReLU(),
         Local(units=10),
         tf.keras.layers.Softmax()
     ])

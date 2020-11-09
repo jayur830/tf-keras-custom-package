@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from custom.model import mnist_model
+from custom.mnist_model import mnist_model
 
 if __name__ == '__main__':
     (train_x, train_y), (test_x, test_y) = tf.keras.datasets.mnist.load_data()
@@ -15,7 +15,7 @@ if __name__ == '__main__':
         x=train_x,
         y=train_y,
         batch_size=256,
-        epochs=20,
+        epochs=50,
         validation_split=.2)
 
     model.evaluate(
