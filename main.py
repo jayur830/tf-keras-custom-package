@@ -1,26 +1,24 @@
 import tensorflow as tf
-import numpy as np
 
-from custom.local import Local
+from custom.model import mnist_model
 
 if __name__ == '__main__':
-    local_layer = Local(units=3, input_shape=(3,))
-    model = tf.keras.models.Sequential([
-        local_layer
-    ])
-    model.compile(optimizer="sgd", loss="mse")
-    model.summary()
+    (train_x, train_y), (test_x, test_y) = tf.keras.datasets.mnist.load_data()
+    train_x = train_x.reshape(train_x.shape + (1,)) / 255.
+    train_y = tf.keras.utils.to_categorical(train_y)
+    test_x = test_x.reshape(test_x.shape + (1,)) / 255.
+    test_y = tf.keras.utils.to_categorical(test_y)
 
-    print(local_layer.weights)
+    model = mnist_model()
 
-    x = np.array([[.1, .2, .3]])
     model.fit(
-        x=x,
-        y=np.array([[.2, .4, .6]]),
-        batch_size=1,
-        epochs=500)
+        x=train_x,
+        y=train_y,
+        batch_size=256,
+        epochs=20,
+        validation_split=.2)
 
-    print(local_layer.weights)
-
-    print(f"x >> {x}")
-    print(f"predict >> {model.predict(x)}")
+    model.evaluate(
+        x=test_x,
+        y=test_y,
+        batch_size=256)
