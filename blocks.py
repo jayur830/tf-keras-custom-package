@@ -59,3 +59,11 @@ class Residual:
             kernel_initializer=self.__kernel_initializer)(layer_0)
         layer_0 = tf.keras.layers.BatchNormalization()(layer_0)
         return tf.keras.layers.Add([layer_0, layer_1])
+
+
+class InceptionBlock:
+    def __init__(self):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        pass
