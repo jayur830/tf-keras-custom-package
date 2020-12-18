@@ -66,3 +66,22 @@ class Local(tf.keras.layers.Layer):
         for i in range(max_length):
             matrix[i, :max_length - i] = matrix[rows - 1 - i, cols - max_length + i:cols] = value
         return matrix
+
+
+class ThresholdedLeakyReLU(tf.keras.layers.Layer):
+    def __init__(self, alpha=.01, threshold=1., **kwargs):
+        super(ThresholdedLeakyReLU, self).__init__(**kwargs)
+        self.supports_masking = True
+        self.__alpha = K.cast_to_floatx(alpha)
+        self.__threshold = K.cast_to_floatx(threshold)
+
+    def build(self, input_shape):
+        super(ThresholdedLeakyReLU, self).build(input_shape)
+        self.built = True
+
+    @tf.autograph.experimental.do_not_convert
+    def call(self, x, **kwargs):
+        return tf.where(x < self.__threshold, K.relu(x, alpha=self.__alpha), self.__alpha * (x - self.__threshold) + self.__threshold)
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
